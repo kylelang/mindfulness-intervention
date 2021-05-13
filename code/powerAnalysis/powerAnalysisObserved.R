@@ -1,7 +1,7 @@
 ### Title:    Run Power Analysis for the Observed Variable Model
 ### Author:   Kyle M. Lang
 ### Created:  2021-05-11
-### Modified: 2021-05-12
+### Modified: 2021-05-13
 
 rm(list = ls(all = TRUE))
 
@@ -25,9 +25,6 @@ y2 ~ 1 * y1
 y3 ~ 1 * y2
 
 y1 ~~ y1
-y2 ~~ 1 * y2
-y3 ~~ 1 * y3
-
 d2 ~~ d2
 d3 ~~ d3
 
@@ -39,16 +36,20 @@ d3 ~ 1
 y1 ~~ d2
 y2 ~~ d3
 
-## Don't estimate means of y after T1:
+## Don't estimate item means after T1:
 y2 + y3 ~ 0 * 1
+
+## Don't estimate item variances after T1:
+y2 ~~ 0 * y2
+y3 ~~ 0 * y3
 
 ## Don't estimate covariance between change factors:
 d2 ~~ 0 * d3
 "
 
-                                        #dat1 <- simMeanData(n, p, es)
-                                        #fit  <- sem(model = mod1, data = dat1)
-                                        #summary(fit)
+dat1 <- simMeanData(n, p, es)
+fit  <- sem(model = mod1, data = dat1)
+summary(fit)
 
 ## Restricted Model:
 mod0 <- gsub("d2 ~ 1", "d2 ~ c('m1', 'm1') * 1", mod1, fixed = TRUE)

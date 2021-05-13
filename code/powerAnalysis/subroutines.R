@@ -1,7 +1,7 @@
 ### Title:    Subroutines for Power Analysis
 ### Author:   Kyle M. Lang
 ### Created:  2021-05-11
-### Modified: 2021-05-12
+### Modified: 2021-05-13
 
 ## Create the factor loading matrix
 lambda <- function(loadings) {
@@ -71,10 +71,57 @@ compareModels <- function(mod1, mod0, data, group) {
     anova(fit1, fit0)[2, "Pr(>Chisq)"]
 }
 
+compareModels2 <- function(mod1, mod0, data, group) {
+    fit1 <- sem(model       = mod1,
+                data        = data,
+                group       = group,
+                group.equal = c("loadings", "intercepts")
+                )
+    fit0 <- sem(model       = mod0,
+                data        = data,
+                group       = group,
+                group.equal = c("loadings", "intercepts")
+               )
+    
+    anova(fit1, fit0)[2, "Pr(>Chisq)"]
+}
+
 cohenD <- function(y1, y2) (mean(y2) - mean(y1)) / sqrt((var(y2) + var(y1)) / 2)
 
-## Run a single replication of the simulation:
-doRep <- function(rp, n, p, es, mod1, mod0) {
+## Run a single replication of the simulation with observed variables:
+doRep1 <- function(rp, n, p, es, mod1, mod0) {
     dat1 <- simMeanData(n, p, es)
     compareModels(mod1, mod0, dat1, "g")
+}
+
+## Run a single replication of the simulation with latent variables:
+doRep2 <- function(rp, nLat, nObs, es, lam, mod1, mod0) {
+    dat1 <- simLatentData(n, nLat, nObs, es, lam)
+    compareModels2(mod1, mod0, dat1, "g")
+}
+
+doRepLatent <- function(n, popMod, fullMod, resMod) {
+    dat1 <- simulateData(model          = popMod,
+                         model.type     = lavaan,
+                         sample.nobs    = c(0.5 * n, 0.5 * n),
+                         meanstructure  = TRUE,
+                         std.lv         = FALSE,
+                         auto.fix.first = FALSE,
+                         auto.var       = TRUE)
+    
+    fullFit <- lavaan(model       = fullMod,
+                      data        = dat1,
+                      auto.var    = TRUE,
+                      group       = "group",
+                      group.equal = c("loadings", "intercepts")
+                      )
+    
+    resFit <- lavaan(model       = resMod,
+                     data        = dat1,
+                     auto.var    = TRUE,
+                     group       = "group",
+                     group.equal = c("loadings", "intercepts")
+                     )
+    
+    anova(fullFit, resFit)[2, "Pr(>Chisq)"]
 }
