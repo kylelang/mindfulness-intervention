@@ -100,6 +100,10 @@ miceOut <- mice(data   = comData,
                 seed   = 235711,
                 ridge  = 1.0e-1)
 
+### NOTE: I think we're getting singular matrices because we're using too many
+### predictors. Need to check the number of observations and select the
+### predictor accordingly.
+
 pdf(paste(plotDir, "mice_traceplots.pdf"), onefile = TRUE)
 plot(miceOut)
 dev.off()
