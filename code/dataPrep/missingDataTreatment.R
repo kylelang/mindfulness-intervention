@@ -1,7 +1,7 @@
 ### Title:    Missing Data Treatment for Mindfulness Intervention Study
 ### Author:   Kyle M. Lang
 ### Created:  2021-06-21
-### Modified: 2021-06-21
+### Modified: 2021-08-24
 
 rm(list = ls(all = TRUE))
 
@@ -9,15 +9,75 @@ library(mice)
 
 dataDir <- "../../../data/"
 plotDir <- "../../figures/"
-fn1     <- "recoded_mindfulness_data.csv"
+fn1     <- "recoded_mindfulness_data-20210623.csv"
 
 dat0 <- read.csv2(paste0(dataDir, fn1))
 
 head(dat0)
 
-## Convert intervention group flag to factor:
-dat0$Interventiegroep <-
-    factor(dat0$Interventiegroep, labels = c("control", "treatment"))
+## Convert categorical variables to factors:
+dat0$Interventiegroep <- factor(x      = dat0$Interventiegroep,
+                                labels = c("control", "treatment")
+                                )
+
+dat0$marital_status_12 <- factor(x      = dat0$marital_status_12,
+                                 levels = 1 : 5,
+                                 labels = c("Getrouwd / samenwonend",
+                                            "Relatie, maar niet samenwonend",
+                                            "Gescheiden / uit elkaar",
+                                            "Alleenstaand",
+                                            "Anders")
+                                 )
+
+dat0$education_12 <- factor(x      = dat0$education_12,
+                            levels = 1 : 6,
+                            labels = c("Basisonderwijs",
+                                       "VMBO / MAVO",
+                                       "HAVO / VWO",
+                                       "MBO",
+                                       "HBO / WO",
+                                       "Anders")
+                            )
+
+dat0$nationality_12 <- factor(x      = dat0$nationality_12,
+                              levels = 1 : 2,
+                              labels = c("Nederlandse", "Anders")
+                              )
+
+dat0$prev_miscarr_abort_12 <- factor(x      = dat0$prev_miscarr_abort_12,
+                                     levels = 1 : 2,
+                                     labels = c("Nee", "Ja")
+                                     )
+
+dat0$prev_childbirth_12 <- factor(x      = dat0$prev_childbirth_12,
+                                  levels = 1 : 2,
+                                  labels = c("Nee", "Ja")
+                                  )
+
+dat0$planned_pregnancy_12 <- factor(x      = dat0$planned_pregnancy_12,
+                                    levels = 1 : 2,
+                                    labels = c("Ja", "Nee")
+                                    )
+
+dat0$paid_work_12 <- factor(x      = dat0$paid_work_12,
+                            levels = 1 : 3,
+                            labels = c("Ja",
+                                       "Nee",
+                                       "Ja, maar momenteel werk ik langer dan 3 maanden niet")
+                            )
+
+dat0$alcohol_12 <- factor(x      = dat0$alcohol_12,
+                          levels = 1 : 4,
+                          labels = c("Nee",
+                                     "Zo nu en dan, maar niet meer dan 1 glas per week",
+                                     "Ja, 2-4 glazen per week",
+                                     "Ja, meer")
+                          )
+
+dat0$smoking_12 <- factor(x      = dat0$smoking_12,
+                          levels = 1 : 2,
+                          labels = c("Nee", "Ja")
+                          )
 
 ### WE ONLY HAVE MINDFULNESS DATA FOR THE INTERVENTION GROUP, SO WE NEED TO
 ### SPLIT THE SAMPLE.

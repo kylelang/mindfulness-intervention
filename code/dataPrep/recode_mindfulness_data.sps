@@ -7,7 +7,7 @@
 
 *Load the data.
 GET
-  FILE='D:\research\active\liannePhd\data\Mindfulness 12-36 weeks complete_raw data_01042021.sav'.
+  FILE='E:\research\active\liannePhd\data\Mindfulness 12-36 weeks complete_raw data_characteristics_23062021.sav'.
 DATASET NAME DataSet1 WINDOW=FRONT.
 
 ***12 weeks*******************************************************************.
@@ -381,7 +381,7 @@ SCSitem12_36
 execute.
 
 *Export the recoded data file as CSV.
-SAVE TRANSLATE OUTFILE='D:\research\active\liannePhd\data\recoded_mindfulness_data.csv'
+SAVE TRANSLATE OUTFILE='E:\research\active\liannePhd\data\recoded_mindfulness_data.csv'
   /TYPE=CSV
   /ENCODING='UTF8'
   /MAP

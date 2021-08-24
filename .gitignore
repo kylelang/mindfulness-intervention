@@ -44,3 +44,6 @@ vignettes/*.pdf
 
 # Emacs autosave files
 *~
+
+# Mysterious, undeletable auto-save files
+.#*
