@@ -1,0 +1,167 @@
+---
+title: Missing Data Analysis for Mindfulness Intervention Study
+author: Kyle M. Lang
+date: 2021-09-01
+output:
+  html_document:
+    df_print: paged
+---
+
+<style>
+  .wideimage{
+      overflow-x: scroll;
+      white-space: nowrap;
+  }
+
+  .wideimage img{
+     max-width: none;
+  }
+</style>
+
+```{r, include = FALSE}
+source("setOptions.R")
+```
+
+Setup the environment and read in the data.
+
+```{r}
+rm(list = ls(all = TRUE)) # Clean the environment
+
+library(mice)
+
+dataDir <- "../../../data/"
+plotDir <- "../../figures/"
+fn      <- "datList.rds"
+
+datList <- readRDS(paste0(dataDir, fn))
+```
+
+First, we need to get a sense of the scope of the missing dat problem. we'll
+look at the combined and intervetion-group data separately.
+
+## Combined Data
+
+```{r}
+comData <- datList$com
+```
+
+What are the variable-wise proportions of missing data?
+
+```{r, max.height = "200px"}
+pm <- colMeans(is.na(comData))
+pm
+
+range(pm[pm > 0])
+
+hist(pm)
+```
+
+How many missing data patterns exist in the data and what do those patterns 
+looks like?
+
+<div class="wideimage">
+```{r, fig.width = 40, fig.height = 10}
+pats <- md.pattern(comData, rotate.names = TRUE)
+```
+</div>
+
+```{r}
+(nPats <- nrow(pats) - 1) # Number of unique missing data patterns
+```
+
+We only have `r nPats` missing data patterns, and nonresponse is mostly due to 
+attrition.
+
+- The first wave has no missing values
+- Several participants who missed the second wave return for the third wave.
+
+What is the covariance coverage?
+
+```{r}
+cc <- md.pairs(comData)$rr / nrow(comData)
+range(cc[cc < 1])
+hist(cc)
+```
+
+```{r, eval = FALSE}
+for(i in 2:5)
+  print(hist(comData[[i]]))
+
+## Columns to exlude from the imputation:
+ex <- c(1 : ncol(comData))[-ind]
+
+## Also exclude constants:
+ex <- c(ex, which(lev == 1))
+
+## Which column contains the intervention group flag?
+tx <- grep("Interventiegroep", colnames(comData))
+
+rMat <- cor(as.matrix(comData[-c(tx, ex)]), use = "pairwise", method = "spearman")
+warnings()
+
+## Why are we getting NA correlations with EDS_10_28?
+tmp   <- rMat[ , "EDS_10_28"]
+probs <- names(tmp)[is.na(tmp)]
+
+for(x in probs) print(table(comData[c(x, "EDS_10_28")]))
+
+table(comData$EDS_10_28)
+
+### NOTE: EDS_10_28 is nearly constant. After accounting for the missing values,
+###       EDS_10_28 is exactly constant relative to several other variables.
+
+## Exclude EDS_10_28:
+ex <- c(ex, grep("EDS_10_28", colnames(comData)))
+
+## Select the predictors for the imputation model:
+preds <- quickpred(data    = comData,
+                   mincor  = 0.1,
+                   exclude = ex,
+                   include = "Interventiegroep",
+                   method  = "spearman")
+
+colSums(preds)
+
+meth        <- rep("norm", ncol(comData))
+names(meth) <- colnames(comData)
+
+meth[ex]                 <- ""
+meth["Interventiegroep"] <- ""
+meth[pm == 0]            <- ""
+
+## Impute missing values:
+miceOut <- mice(data   = comData,
+                m      = 20,
+                method = meth,
+                pred   = preds,
+                maxit  = 10,
+                seed   = 235711,
+                ridge  = 1.0e-1)
+
+### NOTE: I think we're getting singular matrices because we're using too many
+### predictors. Need to check the number of observations and select the
+### predictor accordingly.
+
+pdf(paste(plotDir, "mice_traceplots.pdf"), onefile = TRUE)
+plot(miceOut)
+dev.off()
+
+rowSums(preds)
+
+?quickpred
+
+
+colMeans(is.na(intData))
+colMeans(is.na(comData))
+
+md.pattern(intData)
+md.pattern(comData)
+
+intCov <- md.pairs(intData)$rr / nrow(intData)
+range(intCov)
+hist(intCov)
+
+comCov <- md.pairs(comData)$rr / nrow(comData)
+range(comCov)
+hist(comCov)
+```

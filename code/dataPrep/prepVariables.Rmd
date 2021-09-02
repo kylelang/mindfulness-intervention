@@ -1,32 +1,14 @@
 ---
 title: Prepare Variables for Mindfulness Intervention Study
 author: Kyle M. Lang
-date: 2021-09-01
-output: html_document
+date: 2021-09-02
+output: 
+  html_document:
+    df_print: paged
 ---
 
 ```{r, include=FALSE}
-options(width = 60)
-
-## The following code will render scrollable text output when the `max-height`
-## chunk option is set 
-## (https://bookdown.org/yihui/rmarkdown-cookbook/hook-scroll.html)
-local({
-  hook_output <- knitr::knit_hooks$get('output')
-  
-  knitr::knit_hooks$set(
-    output = function(x, options) {
-      
-      if (!is.null(options$max.height)) 
-        options$attr.output <- c(
-          options$attr.output,
-          sprintf('style="max-height: %s;"', options$max.height)
-        )
-      
-      hook_output(x, options)
-    }
-  )
-})
+source("setOptions.R")
 ```
 
 First, we setup the environment and read in the data that we processed via the
@@ -42,17 +24,17 @@ fn      <- "recoded_mindfulness_data-20210623.csv"
 
 dat0 <- read.csv2(paste0(dataDir, fn))
 
-head(dat0)
+head(dat0, 10)
 ```
 
 Now, we convert all categorical variables to factors.
 
 ```{r}
-dat0$Interventiegroep <- factor(x      = dat0$Interventiegroep,
+dat0$Interventiegroep <- factor(x = dat0$Interventiegroep,
                                 labels = c("control", "treatment")
                                 )
 
-dat0$marital_status_12 <- factor(x      = dat0$marital_status_12,
+dat0$marital_status_12 <- factor(x = dat0$marital_status_12,
                                  levels = 1:5,
                                  labels = c("Getrouwd / samenwonend",
                                             "Relatie, maar niet samenwonend",
@@ -61,7 +43,7 @@ dat0$marital_status_12 <- factor(x      = dat0$marital_status_12,
                                             "Anders")
                                  )
 
-dat0$education_12 <- factor(x      = dat0$education_12,
+dat0$education_12 <- factor(x = dat0$education_12,
                             levels = 1:6,
                             labels = c("Basisonderwijs",
                                        "VMBO / MAVO",
@@ -71,28 +53,28 @@ dat0$education_12 <- factor(x      = dat0$education_12,
                                        "Anders")
                             )
 
-dat0$nationality_12 <- factor(x      = dat0$nationality_12,
+dat0$nationality_12 <- factor(x = dat0$nationality_12,
                               levels = 1:2,
                               labels = c("Nederlandse", "Anders")
                               )
 
-dat0$prev_miscarr_abort_12 <- factor(x      = dat0$prev_miscarr_abort_12,
+dat0$prev_miscarr_abort_12 <- factor(x = dat0$prev_miscarr_abort_12,
                                      levels = 1:2,
                                      labels = c("Nee", "Ja")
                                      )
 
-dat0$prev_childbirth_12 <- factor(x      = dat0$prev_childbirth_12,
+dat0$prev_childbirth_12 <- factor(x = dat0$prev_childbirth_12,
                                   levels = 1:2,
                                   labels = c("Nee", "Ja")
                                   )
 
-dat0$planned_pregnancy_12 <- factor(x      = dat0$planned_pregnancy_12,
+dat0$planned_pregnancy_12 <- factor(x = dat0$planned_pregnancy_12,
                                     levels = 1:2,
                                     labels = c("Ja", "Nee")
                                     )
 
 dat0$paid_work_12 <-
-    factor(x      = dat0$paid_work_12,
+    factor(x = dat0$paid_work_12,
            levels = 1:3,
            labels = c("Ja",
                       "Nee",
@@ -100,7 +82,7 @@ dat0$paid_work_12 <-
            )
 
 dat0$alcohol_12 <-
-    factor(x      = dat0$alcohol_12,
+    factor(x = dat0$alcohol_12,
            levels = 1:4,
            labels = c("Nee",
                       "Zo nu en dan, maar niet meer dan 1 glas per week",
@@ -108,7 +90,7 @@ dat0$alcohol_12 <-
                       "Ja, meer")
            )
 
-dat0$smoking_12 <- factor(x      = dat0$smoking_12,
+dat0$smoking_12 <- factor(x = dat0$smoking_12,
                           levels = 1:2,
                           labels = c("Nee", "Ja")
                           )
@@ -117,42 +99,87 @@ dat0$smoking_12 <- factor(x      = dat0$smoking_12,
 Check the structure of our data set, so far.
 
 ```{r, max.height = "200px"}
-str(dat0)
+str(dat0, list.len = ncol(dat0))
 ```
-```{r}
-## Convert gestatinal age from character to numeric:
-dat0$Gestational_age_8wpp <- as.numeric(dat0$Gestational_age_8wpp)
 
+Gestational age is represented as character. We need to convert it to numeric.
+
+```{r}
+dat0$Gestational_age_8wpp <- as.numeric(dat0$Gestational_age_8wpp)
+```
+
+What's the difference between `Gestational_age_weeks_8wpp` and 
+`Gestational_age_8wpp`?
+
+```{r}
 tmp           <- dat0[grep("Gestational", colnames(dat0))]
 colnames(tmp) <- c("raw", "week")
 
+tmp
+tmp[, 1] - tmp[, 2]
+```
+
+Is one flavor of gestational age better observed than the other?
+
+```{r}
 with(tmp, sum(is.na(raw) & !is.na(week)))
 with(tmp, sum(is.na(week) & !is.na(raw)))
+```
 
-### Gestational_age_weeks_8wpp is a truncated version of Gestational_age_8wpp
-### The former has less missing data than the latter, though.
-### We can only use one, so we're better off going with the "weeks" version.
+`Gestational_age_weeks_8wpp` is a truncated version of `Gestational_age_8wpp`.
+The former has less missing data than the latter, though. We can only use one, 
+so we're better off going with the "weeks" version.
 
+We can also exclude the participant ID and the date variables.
+
+```{r}
 ## Drop extraneous variables:
-dat1 <- dat0[
+dat0 <- dat0[
     grep("name|date|age_weeks",
          colnames(dat0),
          ignore.case = TRUE,
-         invert      = TRUE)
+         invert = TRUE)
 ]
 
-head(dat1)
+head(dat0)
+```
 
-### WE ONLY HAVE MINDFULNESS DATA FOR THE INTERVENTION GROUP, SO WE NEED TO
-### SPLIT THE SAMPLE.
+Check for any constant columns.
 
+```{r}
+lev    <- sapply(dat0, function(x) length(unique(na.omit(x))))
+(const <- colnames(dat0)[lev == 1])
+```
+
+What are the values of these constants?
+
+```{r}
+na.omit(dat0[const])[1, ]
+```
+
+Are any of these constant columns mostly missing?
+
+```{r}
+colMeans(is.na(dat0[const]))
+```
+
+Remove the constant columns.
+
+```{r}
+dat0 <- dat0[setdiff(colnames(dat0), const)]
+```
+
+We only have mindfulness data for the intervention group, so we need to split
+the sample.
+
+```{r}
 datList <- list()
 
 ## Data for only the intervention group:
-datList$int <- dat1[dat1$Interventiegroep == "treatment", ]
+datList$int <- dat0[dat0$Interventiegroep == "treatment", ]
 
 ## Combined data without mindfulness items:
-datList$com <- dat1[grep("^TFMQ|^RRQ|^SCS", colnames(dat1), invert = TRUE)]
+datList$com <- dat0[grep("^TFMQ|^RRQ|^SCS", colnames(dat0), invert = TRUE)]
 
 saveRDS(datList, paste0(dataDir, "datList.rds"))
 ```
