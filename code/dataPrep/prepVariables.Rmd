@@ -1,14 +1,19 @@
 ---
 title: Prepare Variables for Mindfulness Intervention Study
 author: Kyle M. Lang
-date: 2021-09-02
-output: 
-  html_document:
+date: 2021-10-05
+output:
+  prettydoc::html_pretty:
+    theme: architect
+    highlight: github
     df_print: paged
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r, include=FALSE}
 source("setOptions.R")
+library(xtable)
 ```
 
 First, we setup the environment and read in the data that we processed via the
@@ -26,6 +31,8 @@ dat0 <- read.csv2(paste0(dataDir, fn))
 
 head(dat0, 10)
 ```
+
+---
 
 Now, we convert all categorical variables to factors.
 
@@ -96,6 +103,37 @@ dat0$smoking_12 <- factor(x = dat0$smoking_12,
                           )
 ```
 
+Check the categorical variables for sparse cells.
+
+```{r, echo = FALSE, results = "asis"}
+facVars <- colnames(dat0)[sapply(dat0, is.factor)]
+
+makeTable <- function(target, group, data) {
+  tab <- tapply(data[[target]], data[[group]], table)
+  tmp <- rbind.data.frame(tab)
+  
+  rownames(tmp) <- levels(data[[target]])
+  
+  knitr::kable(tmp, caption = target)
+}
+
+for(v in facVars)
+  print(makeTable(v, "Interventiegroep", dat0))
+```
+
+Several variables are constant within either the treatment or control groups.
+There are also several variables with very sparse categories. 
+
+- We'll need to drop some variables from the analysis
+
+  - Those that are constant in one or both groups
+  
+- We'll need to collapse some categories
+
+   - Those that contain sparse groups
+  
+---
+
 Check the structure of our data set, so far.
 
 ```{r, max.height = "200px"}
@@ -144,6 +182,12 @@ dat0 <- dat0[
 head(dat0)
 ```
 
+`EDS_10` is a screening variable, so we need to drop it from every wave.
+
+```{r}
+dat0 <- dat0[grep("EDS_10_\\d", colnames(dat0), invert = TRUE)]
+```
+
 Check for any constant columns.
 
 ```{r}
@@ -168,6 +212,8 @@ Remove the constant columns.
 ```{r}
 dat0 <- dat0[setdiff(colnames(dat0), const)]
 ```
+
+---
 
 We only have mindfulness data for the intervention group, so we need to split
 the sample.
