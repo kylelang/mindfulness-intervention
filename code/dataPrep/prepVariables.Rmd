@@ -109,7 +109,7 @@ Check the categorical variables for sparse cells.
 facVars <- colnames(dat0)[sapply(dat0, is.factor)]
 
 makeTable <- function(target, group, data) {
-  tab <- tapply(data[[target]], data[[group]], table)
+  tab <- tapply(data[[target]], data[[group]], table, useNA = "ifany")
   tmp <- rbind.data.frame(tab)
   
   rownames(tmp) <- levels(data[[target]])
@@ -127,6 +127,7 @@ There are also several variables with very sparse categories.
 - We'll need to drop some variables from the analysis
 
   - Those that are constant in one or both groups
+  - At least `alcohol_12` and `smoking_12`
   
 - We'll need to collapse some categories
 
@@ -138,6 +139,14 @@ Check the structure of our data set, so far.
 
 ```{r, max.height = "200px"}
 str(dat0, list.len = ncol(dat0))
+```
+
+The `EndDate_XX` variables are all character. Let's convert them to dates.
+
+```{r}
+dateNames       <- grep("EndDate_\\d", colnames(dat0), value = TRUE)
+dat0[dateNames] <- lapply(dat0[dateNames], as.Date, format = "%m/%d/%Y")
+
 ```
 
 Gestational age is represented as character. We need to convert it to numeric.
@@ -168,12 +177,12 @@ with(tmp, sum(is.na(week) & !is.na(raw)))
 The former has less missing data than the latter, though. We can only use one, 
 so we're better off going with the "weeks" version.
 
-We can also exclude the participant ID and the date variables.
+We can also exclude the participant ID.
 
 ```{r}
 ## Drop extraneous variables:
 dat0 <- dat0[
-    grep("name|date|age_weeks",
+    grep("name|age_weeks",
          colnames(dat0),
          ignore.case = TRUE,
          invert = TRUE)
@@ -229,3 +238,5 @@ datList$com <- dat0[grep("^TFMQ|^RRQ|^SCS", colnames(dat0), invert = TRUE)]
 
 saveRDS(datList, paste0(dataDir, "datList.rds"))
 ```
+
+

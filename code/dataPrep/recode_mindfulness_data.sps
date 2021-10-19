@@ -7,7 +7,7 @@
 
 *Load the data.
 GET
-  FILE='E:\research\active\liannePhd\data\Mindfulness 12-36 weeks complete_raw data_characteristics_23062021.sav'.
+  FILE='E:\research\active\liannePhd\data\Mindfulness 12-36 weeks complete_raw data_characteristics_25082021.sav'.
 DATASET NAME DataSet1 WINDOW=FRONT.
 
 ***12 weeks*******************************************************************.
