@@ -1,0 +1,28 @@
+pre {
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+pre[class] {
+  max-height: 100px;
+}
+
+.scroll-100 {
+  max-height: 100px;
+  overflow-y: auto;
+  background-color: inherit;
+}
+
+p > img {
+    height: 500px;
+    width: 2000px;
+    border: solid 1px red;
+    white-space: nowrap;
+    overflow-x: auto;
+    overflow-y: auto;
+}
+
+img {
+  max-width: 200%;
+  white-space: nowrap;
+}
